@@ -1,0 +1,41 @@
+version: '3.8'
+services:
+  mysqldb:
+   container_name: mysqldb
+   image: mysql
+   ports:
+    - "3306:3306"
+   environment:
+    MYSQL_ROOT_PASSWORD: root
+    MYSQL_DATABASE: openeye
+    #MYSQL_USER: root
+    #MYSQL_PASSWORD: root
+   volumes:
+      - ./data:/var/lib/mysql
+   networks:
+      - springboot-mysql-net
+  openeyeconfigserver:
+    container_name: openeyeconfigserver
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8888:8888"
+    depends_on:
+      openeyeserviceregistry:
+        condition: service_started
+    environment:
+      - eureka.client.service-url.defaultZone=http://openeyeserviceregistry:8761/eureka/
+      - eureka.client.enabled=true
+      - eureka.host=openeyeserviceregistry
+      - eureka.instance.preferIpAddress=false
+      - eureka.instance.hostname=localhost
+     
+    networks:
+      - springboot-mysql-net
+      - springboot-net
+    restart: on-failure
+
+networks:
+  springboot-mysql-net:
+    driver: bridge
